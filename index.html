@@ -1,1 +1,304 @@
+<!DOCTYPE html>
+<html lang="vi" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voucher - Trạm Tri Thức</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#ecfdf5',
+                            100: '#d1fae5',
+                            500: '#10b981',
+                            600: '#059669',
+                            700: '#047857',
+                            900: '#064e3b',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; transition: background-color 0.3s, color 0.3s; }
+    </style>
+</head>
+<body class="bg-[#f0fdf4] dark:bg-slate-900 text-slate-800 dark:text-slate-100 min-h-screen pb-10">
+
+    <!-- Header -->
+    <header class="max-w-md mx-auto px-4 pt-4 pb-2 flex justify-between items-center">
+        <!-- Logo Mới: VOUCHER / TRẠM TRI THỨC -->
+        <div class="flex items-center gap-2 bg-white dark:bg-slate-800 px-3 py-1.5 rounded-2xl shadow-sm border border-emerald-100 dark:border-slate-700">
+            <div class="w-8 h-8 bg-emerald-500 rounded-xl flex items-center justify-center text-white font-black text-sm shadow-sm shrink-0">
+                <i class="fa-solid fa-graduation-cap text-xs"></i>
+            </div>
+            <div class="flex flex-col leading-tight">
+                <span class="font-black text-[12px] text-emerald-600 dark:text-emerald-400 tracking-wider uppercase">VOUCHER</span>
+                <span class="font-bold text-[9px] text-slate-400 dark:text-slate-400 tracking-tight uppercase">TRẠM TRI THỨC</span>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex items-center gap-2">
+            <!-- Nút Tải xuống / Thêm vào màn hình chính -->
+            <button onclick="toggleModal(true)" title="Cài đặt App" class="w-9 h-9 bg-emerald-100/80 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center shadow-sm hover:scale-105 transition">
+                <i class="fa-solid fa-cloud-arrow-down text-sm"></i>
+            </button>
+            
+            <!-- Nút Mặt trăng / Đèn (Giao diện Sáng Tối) -->
+            <button onclick="toggleDarkMode()" id="btnTheme" title="Chế độ Sáng/Tối" class="w-9 h-9 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-amber-400 rounded-full flex items-center justify-center shadow-sm hover:scale-105 transition">
+                <i id="iconTheme" class="fa-regular fa-moon text-sm"></i>
+            </button>
+        </div>
+    </header>
+
+    <main class="max-w-md mx-auto px-4 space-y-4 mt-2">
+
+        <!-- Search Box -->
+        <section class="bg-gradient-to-br from-emerald-100/90 via-teal-50/60 to-emerald-50/80 dark:from-slate-800 dark:via-slate-800 dark:to-slate-900 p-4.5 rounded-3xl border border-emerald-200/80 dark:border-slate-700 shadow-sm space-y-3">
+            <div>
+                <h2 class="text-sm font-bold text-emerald-950 dark:text-emerald-300 leading-snug">
+                    Dán link sản phẩm Shopee để tìm mã giảm giá
+                </h2>
+            </div>
+
+            <div class="relative flex items-center bg-white dark:bg-slate-900 rounded-2xl p-1.5 border border-emerald-200 dark:border-slate-700 shadow-sm">
+                <input type="text" id="inputUrl" placeholder="Dán link sản phẩm Shopee vào đây..." 
+                       class="w-full pl-3 pr-16 py-2 text-xs text-slate-700 dark:text-slate-200 bg-transparent focus:outline-none placeholder:text-slate-400">
+                <button onclick="pasteClipboard()" 
+                        class="absolute right-1.5 bg-emerald-50 dark:bg-slate-800 hover:bg-emerald-100 text-emerald-700 dark:text-emerald-400 text-xs font-bold px-3 py-1.5 rounded-xl flex items-center gap-1 transition">
+                    <i class="fa-regular fa-paste text-[11px]"></i> Dán
+                </button>
+            </div>
+
+            <button onclick="convertLink()" id="btnConvert"
+                    class="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold py-3.5 rounded-2xl text-xs shadow-md shadow-emerald-500/20 flex items-center justify-center gap-2 transition active:scale-[0.99]">
+                <i class="fa-solid fa-magnifying-glass text-xs"></i> Tìm mã ngay
+            </button>
+        </section>
+
+        <!-- Trạng Thái 1: CHƯA CÓ SẢN PHẨM (Empty State) -->
+        <section id="emptyState" class="bg-white dark:bg-slate-800 rounded-3xl p-6 shadow-sm border border-emerald-100 dark:border-slate-700 text-center space-y-4">
+            <div class="w-36 h-36 mx-auto bg-emerald-50/60 dark:bg-slate-900 rounded-2xl flex items-center justify-center relative border border-emerald-100 dark:border-slate-700">
+                <div class="text-6xl text-emerald-500 dark:text-emerald-400 drop-shadow-md"><i class="fa-solid fa-box-open"></i></div>
+                <div class="absolute -top-1 -right-1 bg-emerald-600 text-white w-8 h-8 rounded-full flex items-center justify-center shadow-md">
+                    <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                </div>
+            </div>
+
+            <div>
+                <h3 class="text-base font-bold text-slate-800 dark:text-slate-100">Chưa có sản phẩm nào</h3>
+                <p class="text-xs text-slate-400 dark:text-slate-400 mt-1 max-w-[240px] mx-auto leading-relaxed">Dán link sản phẩm Shopee vào ô tìm kiếm để xem mã giảm giá tốt nhất.</p>
+            </div>
+
+            <button onclick="pasteAndConvert()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 rounded-2xl text-xs flex items-center justify-center gap-2 shadow-md shadow-emerald-600/20 transition">
+                <i class="fa-solid fa-link text-xs"></i> Dán link sản phẩm
+            </button>
+
+            <div class="bg-emerald-50/50 dark:bg-slate-900 rounded-2xl p-3.5 text-left text-[11px] text-slate-600 dark:text-slate-400 space-y-2 border border-emerald-100/60 dark:border-slate-700">
+                <div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span><span>Sao chép link từ ứng dụng hoặc website Shopee</span></div>
+                <div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span><span>Hệ thống tự động tìm mã Facebook và Instagram phù hợp</span></div>
+                <div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span><span>Cập nhật Shopee bản mới nhất để lấy voucher ổn định hơn</span></div>
+            </div>
+        </section>
+
+        <!-- Trạng Thái 2: ĐÃ CÓ SẢN PHẨM (Result State) -->
+        <section id="resultState" class="hidden bg-white dark:bg-slate-800 rounded-3xl p-5 shadow-sm border border-emerald-100 dark:border-slate-700 space-y-4">
+            
+            <div class="text-center space-y-3 border-b border-slate-100 dark:border-slate-700 pb-4">
+                <div class="w-40 h-40 mx-auto rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-700 shadow-sm bg-slate-50 dark:bg-slate-900">
+                    <img id="prodImg" src="" alt="Sản phẩm" class="w-full h-full object-cover">
+                </div>
+                <h3 id="prodName" class="text-xs font-bold text-slate-800 dark:text-slate-100 leading-snug px-2 text-left line-clamp-3">Tên sản phẩm</h3>
+
+                <div class="bg-emerald-50/50 dark:bg-slate-900 rounded-2xl p-3 text-xs space-y-2 text-slate-600 dark:text-slate-300">
+                    <div class="flex justify-between items-center"><span class="text-slate-400">Mã sản phẩm</span><span id="prodId" class="font-semibold text-slate-700 dark:text-slate-200">--</span></div>
+                    <div class="flex justify-between items-center"><span class="text-slate-400">Tình trạng</span><span class="font-semibold text-emerald-600 bg-emerald-100/80 dark:bg-emerald-950 px-2 py-0.5 rounded-md text-[10px]">Còn hàng</span></div>
+                    <div class="flex justify-between items-center"><span class="text-slate-400">Shop</span><span class="font-semibold text-emerald-600 dark:text-emerald-400">Shopee</span></div>
+                </div>
+            </div>
+
+            <!-- Nút bấm Lấy mã -->
+            <div class="space-y-2.5 pt-1">
+                <!-- Nút Instagram -->
+                <div class="flex items-center gap-2">
+                    <a id="btnInstagram" href="#" target="_blank" rel="noopener noreferrer" class="flex-1 bg-gradient-to-r from-amber-500 via-rose-500 to-purple-600 text-white font-bold py-3.5 px-4 rounded-2xl text-xs flex items-center justify-between shadow-sm truncate hover:opacity-95 transition">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-brands fa-instagram text-base"></i>
+                            <span class="truncate">Lấy mã Instagram</span>
+                        </div>
+                        <i class="fa-solid fa-chevron-right text-[10px] opacity-70"></i>
+                    </a>
+                    <button onclick="copyChannelLink('instagram')" title="Sao chép link" class="w-11 h-11 bg-pink-50 dark:bg-slate-900 text-pink-600 rounded-2xl flex items-center justify-center shrink-0 border border-pink-100 dark:border-slate-700 hover:bg-pink-100 active:scale-95 transition">
+                        <i class="fa-regular fa-copy text-sm"></i>
+                    </button>
+                </div>
+
+                <!-- Nút Facebook -->
+                <div class="flex items-center gap-2">
+                    <a id="btnFacebook" href="#" target="_blank" rel="noopener noreferrer" class="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold py-3.5 px-4 rounded-2xl text-xs flex items-center justify-between shadow-sm truncate hover:opacity-95 transition">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-brands fa-facebook-f text-base"></i>
+                            <span class="truncate">Lấy mã Facebook</span>
+                        </div>
+                        <i class="fa-solid fa-chevron-right text-[10px] opacity-70"></i>
+                    </a>
+                    <button onclick="copyChannelLink('facebook')" title="Sao chép link" class="w-11 h-11 bg-blue-50 dark:bg-slate-900 text-blue-600 rounded-2xl flex items-center justify-center shrink-0 border border-blue-100 dark:border-slate-700 hover:bg-blue-100 active:scale-95 transition">
+                        <i class="fa-regular fa-copy text-sm"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="text-center pt-2"><span id="updateTime" class="text-[10px] text-slate-400">Cập nhật: --:--</span></div>
+        </section>
+
+    </main>
+
+    <!-- Modal Hướng Dẫn Cài Đặt App (Đã sửa lỗi hiển thị mũi tên) -->
+    <div id="installModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-[#1e293b] text-slate-100 max-w-sm w-full rounded-3xl p-6 border border-slate-700 shadow-2xl space-y-4">
+            <h3 class="text-emerald-400 font-extrabold text-sm tracking-wide border-b border-slate-700 pb-3">
+                HƯỚNG DẪN CÀI ĐẶT APP TRẠM TRI THỨC:
+            </h3>
+
+            <div class="space-y-3.5 text-xs text-slate-300 leading-relaxed">
+                <!-- Cảnh báo Zalo/FB -->
+                <div class="p-3 bg-amber-500/10 border border-amber-500/30 rounded-2xl text-amber-300 text-[11px] flex gap-2">
+                    <i class="fa-solid fa-triangle-exclamation text-amber-400 text-sm shrink-0 mt-0.5"></i>
+                    <div>
+                        <strong>Nếu đang mở bằng Facebook/Zalo:</strong> Bấm nút 3 chấm ở góc phải trên cùng → Chọn <strong class="text-emerald-400">'Mở bằng trình duyệt'</strong> trước khi ghim app nha!
+                    </div>
+                </div>
+
+                <!-- iPhone iOS -->
+                <div class="space-y-1">
+                    <div class="font-bold text-white flex items-center gap-1.5">
+                        <i class="fa-brands fa-apple text-emerald-400 text-sm"></i> Trên iPhone / iPad (Safari):
+                    </div>
+                    <p class="pl-5 text-slate-400">
+                        Nhấn nút Chia sẻ <i class="fa-solid fa-arrow-up-from-bracket text-emerald-400 mx-1"></i> → Chọn <strong class="text-emerald-400">[+] Thêm vào MH chính</strong> là xong.
+                    </p>
+                </div>
+
+                <!-- Android -->
+                <div class="space-y-1">
+                    <div class="font-bold text-white flex items-center gap-1.5">
+                        <i class="fa-brands fa-android text-emerald-400 text-sm"></i> Trên Android (Chrome):
+                    </div>
+                    <p class="pl-5 text-slate-400">
+                        Nhấn nút <strong class="text-emerald-400">3 chấm</strong> góc phải → Chọn <strong class="text-emerald-400">'Thêm vào màn hình chính'</strong>.
+                    </p>
+                </div>
+            </div>
+
+            <button onclick="toggleModal(false)" class="w-full bg-slate-800 hover:bg-slate-700 text-emerald-400 font-bold py-2.5 rounded-2xl text-xs text-center border border-slate-700 transition mt-2">
+                Đóng
+            </button>
+        </div>
+    </div>
+
+    <!-- Logic JavaScript -->
+    <script>
+        let channelLinks = { facebook: '', instagram: '' };
+
+        function toggleModal(show) {
+            const modal = document.getElementById('installModal');
+            if (show) modal.classList.remove('hidden');
+            else modal.classList.add('hidden');
+        }
+
+        function toggleDarkMode() {
+            const html = document.documentElement;
+            const icon = document.getElementById('iconTheme');
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                icon.className = 'fa-regular fa-moon text-sm';
+            } else {
+                html.classList.add('dark');
+                icon.className = 'fa-solid fa-sun text-sm';
+            }
+        }
+
+        async function pasteClipboard() {
+            try {
+                const text = await navigator.clipboard.readText();
+                if(text) document.getElementById('inputUrl').value = text;
+            } catch (err) {}
+        }
+
+        async function pasteAndConvert() {
+            await pasteClipboard();
+            if(document.getElementById('inputUrl').value) convertLink();
+        }
+
+        async function convertLink() {
+            const inputUrl = document.getElementById('inputUrl').value.trim();
+            const btn = document.getElementById('btnConvert');
+            
+            if(!inputUrl) return;
+
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-xs"></i> Đang tìm mã...`;
+            btn.disabled = true;
+
+            const isHostinger = window.location.hostname.includes('hostingersite.com') || window.location.hostname.includes('hostinger');
+            const apiUrl = isHostinger ? '/api.php' : '/api/convert-link';
+
+            try {
+                const resFb = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ originalUrl: inputUrl, toolType: 'facebook' })
+                });
+                const dataFb = await resFb.json();
+
+                if(dataFb.success) {
+                    channelLinks.facebook = dataFb.affiliateUrl;
+                    document.getElementById('btnFacebook').href = dataFb.affiliateUrl;
+
+                    if(dataFb.product) {
+                        document.getElementById('prodImg').src = dataFb.product.image || '';
+                        document.getElementById('prodName').innerText = dataFb.product.name || 'Sản phẩm Shopee';
+                        const matchId = inputUrl.match(/i\.\d+\.(\d+)/) || inputUrl.match(/\/(\d+)\/?$/);
+                        document.getElementById('prodId').innerText = matchId ? matchId[1] : 'Shopee Item';
+                    }
+
+                    fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ originalUrl: inputUrl, toolType: 'instagram' })
+                    }).then(r => r.json()).then(dataIg => {
+                        if(dataIg.success) {
+                            channelLinks.instagram = dataIg.affiliateUrl;
+                            document.getElementById('btnInstagram').href = dataIg.affiliateUrl;
+                        }
+                    });
+
+                    const now = new Date();
+                    document.getElementById('updateTime').innerText = `Cập nhật: ${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')} ${now.getDate()}-${now.getMonth()+1}`;
+
+                    document.getElementById('emptyState').classList.add('hidden');
+                    document.getElementById('resultState').classList.remove('hidden');
+                }
+            } catch(e) {
+                console.error(e);
+            } finally {
+                btn.innerHTML = `<i class="fa-solid fa-magnifying-glass text-xs"></i> Tìm mã ngay`;
+                btn.disabled = false;
+            }
+        }
+
+        function copyChannelLink(channel) {
+            const url = channelLinks[channel] || channelLinks.facebook;
+            if(url) navigator.clipboard.writeText(url);
+        }
+    </script>
+</body>
+</html>
 
