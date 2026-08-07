@@ -34,7 +34,7 @@
 
     <!-- Header -->
     <header class="max-w-md mx-auto px-4 pt-4 pb-2 flex justify-between items-center">
-        <!-- Logo Mới: VOUCHER / TRẠM TRI THỨC -->
+        <!-- Logo: VOUCHER / TRẠM TRI THỨC -->
         <div class="flex items-center gap-2 bg-white dark:bg-slate-800 px-3 py-1.5 rounded-2xl shadow-sm border border-emerald-100 dark:border-slate-700">
             <div class="w-8 h-8 bg-emerald-500 rounded-xl flex items-center justify-center text-white font-black text-sm shadow-sm shrink-0">
                 <i class="fa-solid fa-graduation-cap text-xs"></i>
@@ -118,10 +118,28 @@
                 </div>
                 <h3 id="prodName" class="text-xs font-bold text-slate-800 dark:text-slate-100 leading-snug px-2 text-left line-clamp-3">Tên sản phẩm</h3>
 
+                <!-- Bảng Chi Tiết Thông Tin Sản Phẩm & Hoa Hồng -->
                 <div class="bg-emerald-50/50 dark:bg-slate-900 rounded-2xl p-3 text-xs space-y-2 text-slate-600 dark:text-slate-300">
-                    <div class="flex justify-between items-center"><span class="text-slate-400">Mã sản phẩm</span><span id="prodId" class="font-semibold text-slate-700 dark:text-slate-200">--</span></div>
-                    <div class="flex justify-between items-center"><span class="text-slate-400">Tình trạng</span><span class="font-semibold text-emerald-600 bg-emerald-100/80 dark:bg-emerald-950 px-2 py-0.5 rounded-md text-[10px]">Còn hàng</span></div>
-                    <div class="flex justify-between items-center"><span class="text-slate-400">Shop</span><span class="font-semibold text-emerald-600 dark:text-emerald-400">Shopee</span></div>
+                    <div id="rowPrice" class="flex justify-between items-center">
+                        <span class="text-slate-400">Giá bán</span>
+                        <span id="prodPrice" class="font-extrabold text-emerald-600 dark:text-emerald-400">--</span>
+                    </div>
+                    <div id="rowCommission" class="flex justify-between items-center hidden">
+                        <span class="text-slate-400">Hoa hồng dự kiến</span>
+                        <span id="prodCommission" class="font-bold text-amber-600 dark:text-amber-400">--</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-slate-400">Mã sản phẩm</span>
+                        <span id="prodId" class="font-semibold text-slate-700 dark:text-slate-200">--</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-slate-400">Tình trạng</span>
+                        <span class="font-semibold text-emerald-600 bg-emerald-100/80 dark:bg-emerald-950 px-2 py-0.5 rounded-md text-[10px]">Còn hàng</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-slate-400">Shop</span>
+                        <span id="prodShop" class="font-semibold text-emerald-600 dark:text-emerald-400">Shopee</span>
+                    </div>
                 </div>
             </div>
 
@@ -161,7 +179,7 @@
 
     </main>
 
-    <!-- Modal Hướng Dẫn Cài Đặt App (Đã sửa lỗi hiển thị mũi tên) -->
+    <!-- Modal Hướng Dẫn Cài Đặt App -->
     <div id="installModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
         <div class="bg-[#1e293b] text-slate-100 max-w-sm w-full rounded-3xl p-6 border border-slate-700 shadow-2xl space-y-4">
             <h3 class="text-emerald-400 font-extrabold text-sm tracking-wide border-b border-slate-700 pb-3">
@@ -208,6 +226,11 @@
     <script>
         let channelLinks = { facebook: '', instagram: '' };
 
+        function formatVND(amount) {
+            if (!amount) return '0đ';
+            return new Intl.NumberFormat('vi-VN').format(amount) + 'đ';
+        }
+
         function toggleModal(show) {
             const modal = document.getElementById('installModal');
             if (show) modal.classList.remove('hidden');
@@ -227,10 +250,19 @@
         }
 
         async function pasteClipboard() {
+            const input = document.getElementById('inputUrl');
             try {
-                const text = await navigator.clipboard.readText();
-                if(text) document.getElementById('inputUrl').value = text;
-            } catch (err) {}
+                if (navigator.clipboard && navigator.clipboard.readText) {
+                    const text = await navigator.clipboard.readText();
+                    if (text) {
+                        input.value = text;
+                        return;
+                    }
+                }
+                input.focus();
+            } catch (err) {
+                input.focus();
+            }
         }
 
         async function pasteAndConvert() {
@@ -265,8 +297,29 @@
                     if(dataFb.product) {
                         document.getElementById('prodImg').src = dataFb.product.image || '';
                         document.getElementById('prodName').innerText = dataFb.product.name || 'Sản phẩm Shopee';
+                        
+                        const itemId = dataFb.product.itemId || dataFb.itemId;
                         const matchId = inputUrl.match(/i\.\d+\.(\d+)/) || inputUrl.match(/\/(\d+)\/?$/);
-                        document.getElementById('prodId').innerText = matchId ? matchId[1] : 'Shopee Item';
+                        document.getElementById('prodId').innerText = itemId || (matchId ? matchId[1] : 'Shopee Item');
+                        
+                        if (dataFb.product.shopName) {
+                            document.getElementById('prodShop').innerText = dataFb.product.shopName;
+                        }
+
+                        // Giá bán
+                        if (dataFb.product.price) {
+                            document.getElementById('prodPrice').innerText = formatVND(dataFb.product.price);
+                        }
+
+                        // Hoa hồng ước tính
+                        const rowCommission = document.getElementById('rowCommission');
+                        if (dataFb.product.commission) {
+                            const percent = dataFb.product.totalRatePercent ? ` (${dataFb.product.totalRatePercent}%)` : '';
+                            document.getElementById('prodCommission').innerText = `${formatVND(dataFb.product.commission)}${percent}`;
+                            rowCommission.classList.remove('hidden');
+                        } else {
+                            rowCommission.classList.add('hidden');
+                        }
                     }
 
                     fetch(apiUrl, {
@@ -301,4 +354,3 @@
     </script>
 </body>
 </html>
-
